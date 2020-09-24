@@ -32,46 +32,31 @@ void cleanUp() {
   pinMode(RESET, INPUT);
 }
 
-void storeOpcodesInShiftRegister(int data) {
-  //Serial.print("Opcode: ");
-  //Serial.print(data, BIN);
-  //Serial.print("\n\n");
+void storeMemoryAddressInShiftRegister(int data) {
   for (int i = 0; i < 8; i++) {
     digitalWrite(SER, data & 0x80);
-    //Serial.print("SER: ");
-    //Serial.print(digitalRead(SER), BIN);
-    //Serial.print("\n\n");
     data <<= 1;
     digitalWrite(SRCLK, HIGH);
-    //delay(100);
     digitalWrite(SRCLK, LOW);
-    //delay(100);
   }
 }
 
-void storeMemoryAddressInShiftRegister(int data) {
-  //Serial.print("Address: ");
-  //Serial.print(data, BIN);
-  //Serial.print("\n\n");
+void storeOpcodesInShiftRegister(int data) {
   for (int i = 0; i < 8; i++) {
     digitalWrite(SER, data & 0x80);
     data <<= 1;
     digitalWrite(SRCLK, HIGH);
-    //delay(100);
     digitalWrite(SRCLK, LOW);
-    //delay(100);
   }
 }
 
 void storeShiftRegisterInStorageRegister() {
   digitalWrite(RCLK, HIGH);
-  //delay(100);
   digitalWrite(RCLK, LOW);
 }
 
 void clockToStoreInRam() {
   digitalWrite(ACLK, HIGH);
-  //delay(1000);
   digitalWrite(ACLK, LOW);
 }
 
@@ -124,12 +109,10 @@ void setup() {
   digitalWrite(PROG, LOW);
 
   for (int i = 0; i < 16; i++) {
-    storeOpcodesInShiftRegister(program[i]);
     storeMemoryAddressInShiftRegister(i);
+    storeOpcodesInShiftRegister(program[i]);
     storeShiftRegisterInStorageRegister();
-    //delay(2000);
     clockToStoreInRam();
-    //delay(2000);
   }
   digitalWrite(PROG, HIGH);
   reset();

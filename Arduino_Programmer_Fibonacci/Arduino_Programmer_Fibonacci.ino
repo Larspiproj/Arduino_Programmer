@@ -1,4 +1,3 @@
-//Fibonacci
 #define PROG 2
 #define ACLK 3
 
@@ -33,59 +32,42 @@ void cleanUp() {
   pinMode(RESET, INPUT);
 }
 
-void storeOpcodesInShiftRegister(int data) {
-  //Serial.print("Opcode: ");
-  //Serial.print(data, BIN);
-  //Serial.print("\n\n");
+void storeMemoryAddressInShiftRegister(int data) {
   for (int i = 0; i < 8; i++) {
     digitalWrite(SER, data & 0x80);
-    //Serial.print("SER: ");
-    //Serial.print(digitalRead(SER), BIN);
-    //Serial.print("\n\n");
     data <<= 1;
     digitalWrite(SRCLK, HIGH);
-    //delay(100);
     digitalWrite(SRCLK, LOW);
-    //delay(100);
   }
 }
 
-void storeMemoryAddressInShiftRegister(int data) {
-  //Serial.print("Address: ");
-  //Serial.print(data, BIN);
-  //Serial.print("\n\n");
+void storeOpcodesInShiftRegister(int data) {
   for (int i = 0; i < 8; i++) {
     digitalWrite(SER, data & 0x80);
     data <<= 1;
     digitalWrite(SRCLK, HIGH);
-    //delay(100);
     digitalWrite(SRCLK, LOW);
-    //delay(100);
   }
 }
 
 void storeShiftRegisterInStorageRegister() {
   digitalWrite(RCLK, HIGH);
-  //delay(100);
   digitalWrite(RCLK, LOW);
 }
 
 void clockToStoreInRam() {
   digitalWrite(ACLK, HIGH);
-  //delay(1000);
   digitalWrite(ACLK, LOW);
 }
 
 // Reset the computer
-//
 void reset() {
   digitalWrite(RESET, HIGH);
   delay(1000);
   digitalWrite(RESET, LOW);
 }
 
-// Macros to help w/ writing computer assembly programs
-//
+// Defining opcodes 
 #define NOP          (0b00000000)
 #define LDA(addr)    (0b00010000 | (addr))
 #define ADD(addr)    (0b00100000 | (addr))
@@ -98,43 +80,41 @@ void reset() {
 #define OUT          (0b11100000)
 #define HALT         (0b11110000)
 
-// Test program: count up by powers of 2
-//
+// Program fibonacci 
 static int program[16] = {
-  /*  0 */ LDI(1),            // start:  LDI 1     Start at 1
-  /*  1 */ STA(15),           //         STA 15    Save A 
-  /*  2 */ OUT,               // again:  OUT       Display a
-  /*  3 */ ADD(15),           //         ADD 15    Double A
-  /*  4 */ JC(0),             //         JC start  Reset when we overflow
-  /*  5 */ STA(15),           //         STA 15    Save doubled value
-  /*  6 */ JMP(2),            //         JMP again Keep doubling
-  /*  7 */ NOP,
-  /*  8 */ NOP, 
-  /*  9 */ NOP, 
-  /* 10 */ NOP, 
-  /* 11 */ NOP, 
-  /* 12 */ NOP, 
-  /* 13 */ NOP, 
-  /* 14 */ NOP, 
-  /* 15 */ 0,                 // temporary storage
+  /*  0 */ LDI(0),
+  /*  1 */ STA(13),
+  /*  2 */ OUT,
+  /*  3 */ LDI(1),
+  /*  4 */ STA(14), 
+  /*  5 */ OUT,
+  /*  6 */ ADD(13),
+  /*  7 */ JC(0),
+  /*  8 */ STA(15), 
+  /*  9 */ LDA(14), 
+  /* 10 */ STA(13),
+  /* 11 */ LDA(15), 
+  /* 12 */ JMP(4), 
+  /* 13 */ 0, 
+  /* 14 */ 0,
+  /* 15 */ 0,
 };
 
 void setup() {
-  Serial.begin(57600);
   initialize();
-  digitalWrite(PROG, LOW);
+  digitalWrite(PROG, LOW); // select programming mode and "disconnect" bus
 
   for (int i = 0; i < 16; i++) {
-    storeOpcodesInShiftRegister(program[i]);
     storeMemoryAddressInShiftRegister(i);
+    storeOpcodesInShiftRegister(program[i]);
     storeShiftRegisterInStorageRegister();
-    //delay(2000);
     clockToStoreInRam();
-    //delay(2000);
   }
-  digitalWrite(PROG, HIGH);
-  reset();
+  
+  digitalWrite(PROG, HIGH); // quit programming mode and "connect" bus again
+  reset(); // resets computer
   cleanUp();
+
 }
 
 void loop() {
